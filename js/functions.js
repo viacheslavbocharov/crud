@@ -159,6 +159,7 @@ function saveUserData(event) {
   const dataAction = event.target.getAttribute('data-action');
   const userId = event.target.closest('.user-form').getAttribute('data-user-id');
   const user = getUserById(userId);
+  const userIndex = users.findIndex(u => u.id === user.id);
 
   if (dataAction === 'save') {
 
@@ -167,19 +168,21 @@ function saveUserData(event) {
       user[key] = form[key].value;
     }
 
-    const userIndex = users.findIndex(u => u.id === user.id);
+
 
     console.log(user);
-    console.log(userIndex);
+    //console.log(userIndex);
 
     const inputFields = document.querySelectorAll('input');
     alertInputsIfNotFilled(inputFields)
 
 
     if (isFieldsFilled(user)) {
+
       if (userIndex !== -1) {
         users[userIndex] = user;
         console.log('Данные пользователя успешно обновлены.');
+        showUsers(users);
       } else {
         console.error('Пользователь не найден в массиве пользователей.');
       }
@@ -187,7 +190,7 @@ function saveUserData(event) {
     }
 
   }
-
+  //return users[userIndex]
 }
 
 
