@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD Users</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div id="wrapper">
+    <div>
+      <input type="button" value="Add" class="add_btn" />
+    </div>
+    <div id="grid" class="user-list"></div>
+    <div id="view" class="hidden">
+    </div>
+    <div id="form" class="hidden" >
+      <form name="userForm">
+        <p>
+          <input type="text" name="name" placeholder="Name" />
+        </p>
+        <p>
+          <input type="text" name="login" placeholder="Login" />
+        </p>
+        <p>
+          <input type="email" name="email" placeholder="Email" />
+        </p>
+        <p>
+          <input type="number" min="1" max="120" name="age" placeholder="Age" />
+        </p>
+        <p>
+          <input type="button" value="Save" class="save_btn" />
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/functions.js"></script>
+  <script src="js/formFunctions.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
