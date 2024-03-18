@@ -1,30 +1,56 @@
 function showUsers(usersList) {
+  
   const parent = document.querySelector('#grid');
   clearElement(parent);
   parent.addEventListener('click', gridClickHandler)
 
-  // dataset data-* (data-attributes)
-
   for (let user of usersList) {
-    const userRow = document.createElement('div');
-    userRow.classList.add('user_row');
-    userRow.setAttribute('data-id', user.id);
-
-    const userWrapper = createElement('div', { className: 'user-wrapper' }, '', userRow);
-
-    createElement('div', { className: 'user_id' }, user.id, userWrapper);
-    createElement('div', { className: 'user_name' }, user.name, userWrapper);
-
-    const divButtons = createElement('div', { className: 'user_buttons' }, '', userRow);
-    createElement('input', { type: 'button', value: 'View', 'data-action': 'view' }, '', divButtons);
-    //createElement('input', { type: 'button', value: 'Close', 'data-action': 'close' }, '', divButtons);
-
-    createElement('input', { type: 'button', value: 'Edit', 'data-action': 'edit' }, '', divButtons);
-    createElement('input', { type: 'button', value: 'Delete', 'data-action': 'delete' }, '', divButtons);
-
+    const userRow = createUserRow(user);
     parent.appendChild(userRow);
   }
 }
+
+
+
+function createUserRow(user) {
+  // const userRow = document.createElement('div');
+  // userRow.classList.add('user_row');
+  // userRow.setAttribute('data-id', user.id);
+  const userRow = createElement('div', { className: 'user_row', 'data-id': user.id }, '');
+
+  // const userWrapper = createElement('div', { className: 'user-wrapper' }, '', userRow);
+
+  // createElement('div', { className: 'user_id' }, user.id, userWrapper);
+  // createElement('div', { className: 'user_name' }, user.name, userWrapper);
+
+  // const divButtons = createElement('div', { className: 'user_buttons' }, '', userRow);
+  // createElement('input', { type: 'button', value: 'View', 'data-action': 'view' }, '', divButtons);
+
+  // createElement('input', { type: 'button', value: 'Edit', 'data-action': 'edit' }, '', divButtons);
+  // createElement('input', { type: 'button', value: 'Delete', 'data-action': 'delete' }, '', divButtons);
+  createUserRowContent(userRow, user);
+  return userRow;
+}
+
+
+function createUserRowContent(userRow, user) {
+
+  const userWrapper = createElement('div', { className: 'user-wrapper' }, '', userRow);
+
+  createElement('div', { className: 'user_id' }, user.id, userWrapper);
+  createElement('div', { className: 'user_name' }, user.name, userWrapper);
+
+  const divButtons = createElement('div', { className: 'user_buttons' }, '', userRow);
+  createElement('input', { type: 'button', value: 'View', 'data-action': 'view' }, '', divButtons);
+  //createElement('input', { type: 'button', value: 'Close', 'data-action': 'close' }, '', divButtons);
+
+  createElement('input', { type: 'button', value: 'Edit', 'data-action': 'edit' }, '', divButtons);
+  createElement('input', { type: 'button', value: 'Delete', 'data-action': 'delete' }, '', divButtons);
+
+}
+
+
+
 
 // attributes: { value: 'Delete', type: 'button', className: 'delete_btn' }
 // eventHandlers: { click: () => {}, mouseover: () => {}... }
@@ -41,10 +67,15 @@ function createElement(tagName, attributes, content, parent, eventHandlers) {
   }
 
   element.textContent = content;
-  parent.appendChild(element);
+
+  if (parent) {
+    parent.appendChild(element);
+  }
 
   return element;
 }
+
+
 
 function gridClickHandler(event) {
   if (event.target.nodeName === 'INPUT') {
@@ -58,10 +89,11 @@ function gridClickHandler(event) {
         showUserData(user);
         break;
       case 'edit':
-        showEditForm(user);
+        showForm(user, 'Edit user information');
+
         break;
       case 'delete':
-        alert("DELETE button" + userId);
+        deleteUser(user)
         break;
       // case 'close':
       //   clearElement(document.querySelector('#view'));
@@ -70,20 +102,23 @@ function gridClickHandler(event) {
   }
 }
 
+
+
 function getUserById(id) {
   return users.find(user => user.id === id);
 }
 
+
+
 function showUserData(user) {
-  document.querySelector('#view').classList.remove('hidden');
-  const recipientElement = document.querySelector('#view');
+  document.querySelector('#info').classList.remove('hidden');
+  const recipientElement = document.querySelector('#info');
 
   clearElement(recipientElement);
 
   const userInfoWrapper = createElement('div', { 'className': 'user-info-wrapper' }, '', recipientElement);
   createElement('div', {}, 'User information', userInfoWrapper);
-  createElement('input', { type: 'button', value: 'Close', 'data-action': 'close' }, '', userInfoWrapper);
-
+  createElement('input', { type: 'button', value: 'Close', 'data-action': 'close' }, '', userInfoWrapper, { click: () => { closeAndHideInfoElement(event) } });
 
   for (const key in user) {
     if (user.hasOwnProperty.call(user, key)) {
@@ -95,14 +130,18 @@ function showUserData(user) {
   }
 }
 
+
+
 function clearElement(element) {
   element.innerHTML = '';
 }
 
-function hideUserData(event) {
+
+
+function closeAndHideInfoElement(event) {
   const dataAction = event.target.getAttribute('data-action');
   if (dataAction === 'close') {
-    const viewElement = document.querySelector('#view');
+    const viewElement = document.querySelector('#info');
     clearElement(viewElement);
     viewElement.classList.add('hidden');
   }
@@ -110,87 +149,122 @@ function hideUserData(event) {
 }
 
 
-{/* <p>User information</p>
-<p>Id: 1</p>
-<p>Name: 1</p>
-<p>Login: 1</p>
-<p>Email: 1</p>
-<p>Age: 1</p>
-<input type="button" value="Close"> */}
 
 // При клике на кнопку “View” - сбоку открываются данные пользователя
 // При клике на кнопку “Edit” появляется возможность редактировать данные пользователя в блоке под списком.
 // Данные валидируются (на пустоту) и сохраняются при клике на кнопку “Save” и обновляют данные в списке
 
+function showForm(user, formName) {
 
-
-function showEditForm(user) {
-  document.querySelector('#view').classList.remove('hidden');
-  const recipientElement = document.querySelector('#view');
+  document.querySelector('#info').classList.remove('hidden');
+  const recipientElement = document.querySelector('#info');
 
   clearElement(recipientElement);
 
   const userInfoWrapper = createElement('div', { 'className': 'user-info-wrapper' }, '', recipientElement);
-  createElement('div', {}, 'User information', userInfoWrapper);
-  createElement('input', { type: 'button', value: 'Close', 'data-action': 'close' }, '', userInfoWrapper);
+  createElement('div', {}, formName, userInfoWrapper);
+  createElement('input', { type: 'button', value: 'Close', 'data-action': 'close' }, '', userInfoWrapper, { click: () => { closeAndHideInfoElement(event) } });
 
-  const formElement = createElement('form', { 'className': 'user-form', name: 'editform', 'data-user-id': user.id }, '', recipientElement);
+  const formElement = createElement('form', { 'className': 'user-form', name: 'userform', 'data-user-id': user.id }, '', recipientElement);
 
   for (const key in user) {
     if (user.hasOwnProperty.call(user, key)) {
+      if (key === 'id') {
+        continue;
+      }
       let keyName = key;
       let firstLetterCapitalized = keyName.charAt(0).toUpperCase() + keyName.slice(1);
       let innerText = `${firstLetterCapitalized} `
       const label = createElement('label', {}, innerText, formElement);
       const inputWrapper = createElement('div', { 'className': 'input-wrapper' }, '', label);
 
-
       createElement('input', { type: 'text', name: key, value: user[key] }, '', inputWrapper);
-
     }
   }
-  createElement('input', { type: 'button', value: 'Save', 'data-action': 'save' }, '', formElement);
-
+  createElement('input', { type: 'button', value: 'Save', 'data-action': 'save', 'data-id': user.id }, '', formElement, { click: () => { saveUserData(event); } });
 }
+
+
+
+function createNewUser() {
+
+  const newUser = {
+    id: (users.length + 1).toString(),
+    name: '',
+    login: '',
+    email: '',
+    age: '',
+  }
+
+  showForm(newUser, 'Add new user')
+}
+
 
 
 function saveUserData(event) {
 
-  const dataAction = event.target.getAttribute('data-action');
-  const userId = event.target.closest('.user-form').getAttribute('data-user-id');
-  const user = getUserById(userId);
-  const userIndex = users.findIndex(u => u.id === user.id);
+  const userId = event.target.getAttribute('data-id');
+  let user = {};
+  const form = document.forms.userform;
 
-  if (dataAction === 'save') {
-
-    const form = document.forms.editform;
-    for (const key in user) {
-      user[key] = form[key].value;
+  if (userId > users.length) {
+    user = {
+      id: userId,
+      name: form.name.value,
+      login: form.login.value,
+      email: form.email.value,
+      age: form.age.value,
     }
 
+  } else {
 
+    user = getUserById(userId);
 
-    console.log(user);
-    //console.log(userIndex);
+    for (const key in user) {
+      if (key === 'id') {
+        continue;
+      }
+      user[key] = form[key].value;
+    }
+  }
 
-    const inputFields = document.querySelectorAll('input');
-    alertInputsIfNotFilled(inputFields)
+  const inputFields = document.querySelectorAll('input');
+  alertInputsIfNotFilled(inputFields)
 
+  if (isFieldsFilled(user)) {
 
-    if (isFieldsFilled(user)) {
+    if (userId > users.length) {
+      users.push(user);
+      pushUsersToLocalStorage (users);
+      const grid = document.querySelector('#grid');
+      const userRow = createUserRow(user)
+      grid.appendChild(userRow);
+
+    } else {
+
+      const userIndex = users.findIndex(u => u.id === user.id);
 
       if (userIndex !== -1) {
         users[userIndex] = user;
-        console.log('Данные пользователя успешно обновлены.');
-        showUsers(users);
+        const userRow = document.querySelector(`.user_row[data-id="${user.id}"]`);
+        userRow.innerHTML = '';
+        createUserRowContent(userRow, user)
+        pushUsersToLocalStorage (users);
+
       } else {
-        console.error('Пользователь не найден в массиве пользователей.');
+        console.error('The user did not find');
       }
-
     }
-
+    const info = document.querySelector('#info');
+    clearElement(info);
+    info.classList.add('hidden');
   }
-  //return users[userIndex]
+}
+
+
+
+function pushUsersToLocalStorage (users) {
+  localStorage.setItem('users', JSON.stringify(users));
 }
 
 
@@ -215,6 +289,7 @@ function alertInputsIfNotFilled(inputFields) {
 };
 
 
+
 function isFieldsFilled(user) {
   for (const key in user) {
     if (!user[key] && user[key] !== 0) {
@@ -225,3 +300,20 @@ function isFieldsFilled(user) {
   // Если все значения не пустые, возвращаем true
   return true;
 };
+
+
+
+function deleteUser(user) {
+  let isDelete = window.confirm('Are you shure?');
+  if (isDelete) {
+    const userIndex = users.findIndex(u => u.id === user.id);
+    users.splice(userIndex, 1);
+    localStorage.setItem('users', JSON.stringify(users));
+    const elementToRemove = document.querySelector(`[data-id="${user.id}"]`);
+    if (elementToRemove) {
+      elementToRemove.parentNode.removeChild(elementToRemove);
+    } else {
+      console.log("Элемент с указанным data-id не найден.");
+    }
+  }
+}
