@@ -1,5 +1,5 @@
 function showUsers(usersList) {
-  
+
   const parent = document.querySelector('#grid');
   clearElement(parent);
   parent.addEventListener('click', gridClickHandler)
@@ -48,7 +48,6 @@ function createUserRowContent(userRow, user) {
   createElement('input', { type: 'button', value: 'Delete', 'data-action': 'delete' }, '', divButtons);
 
 }
-
 
 
 
@@ -186,14 +185,35 @@ function showForm(user, formName) {
 
 
 
+function generateId() {
+  const chars = '0123456789'; // Возможные символы для номера
+  let newId = ''; // Переменная для хранения сгенерированного номера
+  
+  // Генерируем 8 случайных цифр и добавляем их к строке номера
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    newId += chars[randomIndex];
+  }
+
+  if (getUserById(newId) === undefined){
+    return newId;
+  } else {
+    return generateId()
+  }
+ 
+}
+
+
 function createNewUser() {
 
   const newUser = {
-    id: (users.length + 1).toString(),
+    id: generateId(),
     name: '',
     login: '',
     email: '',
     age: '',
+    phone: '',
+    card: ''
   }
 
   showForm(newUser, 'Add new user')
@@ -206,14 +226,16 @@ function saveUserData(event) {
   const userId = event.target.getAttribute('data-id');
   let user = {};
   const form = document.forms.userform;
-
-  if (userId > users.length) {
+  
+  if (getUserById(userId) === undefined) {
     user = {
       id: userId,
       name: form.name.value,
       login: form.login.value,
       email: form.email.value,
       age: form.age.value,
+      phone: form.phone.value,
+      card: form.card.value,
     }
 
   } else {
@@ -228,14 +250,16 @@ function saveUserData(event) {
     }
   }
 
-  const inputFields = document.querySelectorAll('input');
-  alertInputsIfNotFilled(inputFields)
 
-  if (isFieldsFilled(user)) {
+  const inputFields = form.querySelectorAll('input[type="text"]');
+  let qtyOfCorrectFilledInputs = verifyInputFields(inputFields)
+  let qtyOfUserProp = countUserProperties(user)
 
-    if (userId > users.length) {
+  if (qtyOfCorrectFilledInputs === (qtyOfUserProp - 1)) {
+
+    if (getUserById(userId) === undefined) {
       users.push(user);
-      pushUsersToLocalStorage (users);
+      pushUsersToLocalStorage(users);
       const grid = document.querySelector('#grid');
       const userRow = createUserRow(user)
       grid.appendChild(userRow);
@@ -249,7 +273,7 @@ function saveUserData(event) {
         const userRow = document.querySelector(`.user_row[data-id="${user.id}"]`);
         userRow.innerHTML = '';
         createUserRowContent(userRow, user)
-        pushUsersToLocalStorage (users);
+        pushUsersToLocalStorage(users);
 
       } else {
         console.error('The user did not find');
@@ -261,22 +285,79 @@ function saveUserData(event) {
   }
 }
 
+function countUserProperties(user) {
+  let count = 0;
+  for (let prop in user) {
+    if (user.hasOwnProperty(prop)) {
+      count++;
+    }
+  }
+  return count;
+}
 
-
-function pushUsersToLocalStorage (users) {
+function pushUsersToLocalStorage(users) {
   localStorage.setItem('users', JSON.stringify(users));
 }
 
 
 
-function alertInputsIfNotFilled(inputFields) {
+function verifyInputFields(inputFields) {
+  let qtyOfTrueChecks = 0;
   inputFields.forEach(input => {
-    if (!input.value) {
+
+    let result;
+    let pattern;
+    let errorText;
+
+    switch (input.name) {
+      case 'name':
+        pattern = /^[A-Z][a-z]{1,}$/;
+        result = pattern.test(input.value);
+        errorText = 'Wrong format'
+        break;
+      case 'login':
+        pattern = /^(?=.*[!@#$%^&*()_+}{":;'?/>.<,])(?=.*[a-zA-Z0-9]).{8,}$/;
+        result = pattern.test(input.value);
+        errorText = 'min 8 char including min 1 special char.'
+        break;
+      case 'email':
+        pattern = /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/;
+        result = pattern.test(input.value);
+        errorText = 'Wrong email format'
+        break;
+      case 'age':
+        pattern = /^(1[6-9]|[2-9][0-9]|1[0-0][0-9]|110)$/;
+        result = pattern.test(input.value);
+        errorText = 'Only digits. You must be at least 16'
+        break;
+      case 'phone':
+        pattern = /^\+380\d{9}$/;
+        result = pattern.test(input.value);
+        errorText = 'Wrong format. Use +380XXXXXXXXX'
+        break;
+      case 'card':
+        pattern = /^(?:\d{4}[-_ ]?){3}\d{4}$/;
+        result = pattern.test(input.value);
+        errorText = 'Wrong format. Use XXXX XXXX XXXX XXXX'
+        break;
+
+      default:
+        break;
+    }
+    if (result === true) {
+      qtyOfTrueChecks++
+    }
+
+    if (!result) {
+
+      if (input.nextElementSibling && input.nextElementSibling.className === 'error-message') {
+        input.nextElementSibling.remove();
+      }
       // Если поле не заполнено, добавляем div с сообщением об ошибке
       if (!input.nextElementSibling || input.nextElementSibling.className !== 'error-message') {
         const errorMessage = document.createElement('div');
         errorMessage.className = 'error-message';
-        errorMessage.textContent = 'This is a required field';
+        errorMessage.textContent = input.value === '' ? `This is a required field!` : `${errorText}`;
         input.parentNode.insertBefore(errorMessage, input.nextElementSibling);
       }
     } else {
@@ -285,22 +366,9 @@ function alertInputsIfNotFilled(inputFields) {
         input.nextElementSibling.remove();
       }
     }
-  });
+  })
+  return qtyOfTrueChecks;
 };
-
-
-
-function isFieldsFilled(user) {
-  for (const key in user) {
-    if (!user[key] && user[key] !== 0) {
-      // Если значение пусто или undefined, возвращаем false
-      return false;
-    }
-  }
-  // Если все значения не пустые, возвращаем true
-  return true;
-};
-
 
 
 function deleteUser(user) {
